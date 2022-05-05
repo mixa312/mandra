@@ -21,7 +21,7 @@ def decimal2binary(value):
 
 def adc():
     value = 0
-    for i in range(8):
+    for i in range(len(dac)):
         GPIO.output(dac[i], 1)
         time.sleep(0.007)
         
@@ -40,13 +40,14 @@ def show_voltage(value):
 
 try:
     voltage_results = []
-
+    voltage_ADC = []
     start_time = time.time()
     GPIO.output(troyka, 1)
     current_voltage = adc()
     while current_voltage < 0.97*256:
         show_voltage(current_voltage)
         print(current_voltage, "{:.2f}V".format(current_voltage/256*3.3))
+        voltage_ADC.append(current_voltage)
         voltage_results.append(current_voltage/256*3.3)
         current_voltage = adc()
 
@@ -55,6 +56,7 @@ try:
     while current_voltage > 0.02*256:
         show_voltage(current_voltage)
         print(current_voltage, "{:.2f}V".format(current_voltage/256*3.3))
+        voltage_ADC.append(current_voltage)
         voltage_results.append(current_voltage/256*3.3)
         current_voltage = adc()
     end_time = time.time()
@@ -65,11 +67,15 @@ try:
     plt.show()
 
 
-    with open("data.txt", 'w') as data:
-        data.write('\n'.join([str(item) for item in voltage_results]))
+    with open("data(voltage).txt", 'w') as dataV:
+        dataV.write('\n'.join([str(item) for item in voltage_results]))
+    
+    with open("data(ADC).txt", 'w') as dataA:
+        dataA.write('\n'.join([str(item) for item in voltage_ADC]))
+
     with open("settings.txt", 'w') as settings:
-        settings.write("Средняя частота дискретизации: {:.2f} /n ".format(len(voltage_results)/experiment_time))
-        settings.write("Шаг квантования АЦП: {:.2f}V".format(3.3/256))
+        settings.write("{:.3f} \n".format(experiment_time/len(voltage_results)))
+        settings.write("{:.3f}".format(3.3/256))
 
     print("Время эксперимента: ", str(experiment_time))
     print("Период одного измерения: {:.2f}".format(experiment_time/len(voltage_results)))
